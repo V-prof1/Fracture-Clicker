@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+  <meta name="theme-color" content="#090b12">
+  <meta name="description" content="Fracture Clicker - um clicker de progressão longa, rebirths, mutações e fragmentos.">
+  <title>Fracture Clicker</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="ambient" aria-hidden="true"></div>
+  <main class="app" id="app">
+    <header class="topbar">
+      <button class="brand" id="brandHold" type="button" aria-label="Fracture Clicker">
+        <span class="brand-mark">◇</span>
+        <span><strong>FRACTURE</strong><small>CLICKER</small></span>
+      </button>
+      <div class="top-actions">
+        <div class="pill"><span>↻</span><b id="rebirthTop">0</b></div>
+        <div class="pill"><span>◆</span><b id="fragmentTop">0</b></div>
+        <button class="icon-btn" id="settingsBtn" type="button" aria-label="Configurações">⚙</button>
+      </div>
+    </header>
+
+    <section class="hero">
+      <div class="money-wrap">
+        <span class="eyebrow">MONEY</span>
+        <h1 id="moneyText">$0</h1>
+        <p><span id="perSecondText">$0</span>/s · <span id="clickPowerText">$1</span>/click</p>
+      </div>
+
+      <div class="buff-row" id="buffRow" aria-live="polite"></div>
+
+      <div class="core-zone" id="coreZone">
+        <div class="core-stage-label"><span id="coreStageName">Dormant Core</span><small id="nextStageText">Próxima evolução: 10 rebirths</small></div>
+        <button class="core core-0" id="coreBtn" type="button" aria-label="Clique no núcleo">
+          <span class="core-ring ring-a"></span>
+          <span class="core-ring ring-b"></span>
+          <span class="core-inner"></span>
+          <span class="core-spark"></span>
+        </button>
+        <div class="streak-wrap">
+          <div><span>STREAK</span><b id="streakText">x1.00</b></div>
+          <div class="bar"><i id="streakBar"></i></div>
+        </div>
+        <div class="overcharge-wrap">
+          <button id="overchargeBtn" type="button" disabled>OVERCHARGE <b id="overchargeText">0%</b></button>
+        </div>
+      </div>
+    </section>
+
+    <nav class="tabs" aria-label="Menu principal">
+      <button class="tab active" data-tab="upgrades" type="button">Upgrades</button>
+      <button class="tab" data-tab="missions" type="button">Missões</button>
+      <button class="tab" data-tab="rebirth" type="button">Rebirth</button>
+      <button class="tab" data-tab="collection" type="button">Coleção</button>
+    </nav>
+
+    <section class="panel tab-panel active" id="tab-upgrades">
+      <div class="section-head">
+        <div><span class="eyebrow">POWER</span><h2>Upgrades</h2></div>
+        <div class="buy-modes" id="buyModes">
+          <button class="active" data-buy="1" type="button">x1</button><button data-buy="10" type="button">x10</button><button data-buy="100" type="button">x100</button><button data-buy="max" type="button">MAX</button>
+        </div>
+      </div>
+      <div class="upgrade-columns">
+        <div><h3>👆 Click Power</h3><div id="clickUpgrades" class="upgrade-list"></div></div>
+        <div><h3>⚙ Auto Click</h3><div id="autoUpgrades" class="upgrade-list"></div></div>
+      </div>
+    </section>
+
+    <section class="panel tab-panel" id="tab-missions">
+      <div class="section-head"><div><span class="eyebrow">QUICK OBJECTIVES</span><h2>Missões</h2></div><small>Recompensas escalam com seu progresso.</small></div>
+      <div id="missionsList" class="mission-list"></div>
+      <div class="section-head achievements-head"><div><span class="eyebrow">PERMANENT</span><h2>Conquistas</h2></div><b id="achievementCount">0/0</b></div>
+      <div id="achievementsList" class="achievement-grid"></div>
+    </section>
+
+    <section class="panel tab-panel" id="tab-rebirth">
+      <div class="rebirth-card">
+        <span class="eyebrow">RESET. GROW. FRACTURE.</span>
+        <h2>Rebirth</h2>
+        <p>Resete Money e upgrades para ganhar Rebirths e Fragments permanentes.</p>
+        <div class="rebirth-stats"><div><span>Próximo custo</span><b id="rebirthCost">$100K</b></div><div><span>Você recebe</span><b id="rebirthGain">+1 ↻ · +1 ◆</b></div><div><span>Multiplicador</span><b id="rebirthMultiplier">x1.00</b></div></div>
+        <button class="primary-btn" id="rebirthBtn" type="button">REBIRTH</button>
+      </div>
+      <div class="section-head"><div><span class="eyebrow">PERMANENT TREE</span><h2>Fragment Tree</h2></div><b><span id="treeFragments">0</span> ◆</b></div>
+      <div id="fragmentTree" class="tree-grid"></div>
+    </section>
+
+    <section class="panel tab-panel" id="tab-collection">
+      <div class="section-head"><div><span class="eyebrow">DISCOVERIES</span><h2>Mutações</h2></div><b id="mutationCount">0/10</b></div>
+      <p class="mut-note">Mutações podem surgir durante o jogo. A mutação secreta não aparece aqui até ser encontrada.</p>
+      <div id="mutationGrid" class="mutation-grid"></div>
+      <div class="section-head stats-head"><div><span class="eyebrow">LIFETIME</span><h2>Estatísticas</h2></div></div>
+      <div id="statsGrid" class="stats-grid"></div>
+    </section>
+  </main>
+
+  <div class="toast-stack" id="toastStack" aria-live="polite"></div>
+  <div class="float-layer" id="floatLayer" aria-hidden="true"></div>
+  <div class="event-layer" id="eventLayer"></div>
+
+  <dialog class="modal" id="settingsModal">
+    <form method="dialog" class="modal-shell" id="settingsForm">
+      <div class="modal-head"><div><span class="eyebrow">FRACTURE</span><h2>Configurações</h2></div><button class="icon-btn close-modal" type="submit" aria-label="Fechar">×</button></div>
+      <section class="setting-section"><h3>Perfil</h3><label>Nickname<input id="nicknameInput" maxlength="18" autocomplete="off" placeholder="Seu nickname"></label><small>Salvo somente neste dispositivo nesta versão.</small></section>
+      <section class="setting-section"><h3>Áudio</h3><label>Volume dos clicks<input id="clickVolume" type="range" min="0" max="100" value="55"></label><label>Estilo do click<select id="clickStyle"><option value="classic">Classic</option><option value="soft">Soft</option><option value="slime">Slime</option><option value="mechanical">Mechanical</option><option value="magnetic">Magnetic Keyboard</option><option value="typewriter">Typewriter</option><option value="digital">Digital</option><option value="crystal">Crystal</option><option value="heavy">Heavy</option><option value="void">Void</option></select></label><button class="secondary-btn" id="testSoundBtn" type="button">TEST CLICK</button></section>
+      <section class="setting-section"><h3>Visual & Gameplay</h3><label class="switch-row">Partículas<input id="particlesToggle" type="checkbox" checked></label><label class="switch-row">Screen shake<input id="shakeToggle" type="checkbox" checked></label><label class="switch-row">Números flutuantes<input id="floatToggle" type="checkbox" checked></label><label>Notação<select id="notationSelect"><option value="suffix">1K / 1M / 1B</option><option value="scientific">1.00e12</option></select></label></section>
+      <section class="setting-section"><h3>Redeem Code</h3><div class="code-row"><input id="codeInput" autocomplete="off" spellcheck="false" placeholder="Digite um código"><button id="redeemBtn" class="secondary-btn" type="button">REDEEM</button></div><small id="codeStatus">Códigos promocionais podem ser usados uma vez por save.</small></section>
+      <section class="setting-section danger-zone"><h3>Save</h3><button id="exportBtn" class="secondary-btn" type="button">EXPORTAR SAVE</button><button id="resetBtn" class="danger-btn" type="button">RESETAR PROGRESSO</button></section>
+      <div class="version">Fracture Clicker · Beta 0.1</div>
+    </form>
+  </dialog>
+
+  <dialog class="modal dev-modal" id="devModal">
+    <div class="modal-shell dev-shell">
+      <div class="modal-head"><div><span class="eyebrow">108 SYSTEM</span><h2>DEV PANEL</h2></div><button class="icon-btn" id="devClose" type="button">×</button></div>
+      <div class="dev-badge">DEVELOPER ACCESS · <span id="devNick">---</span></div>
+      <div class="dev-grid">
+        <section><h3>Economy</h3><label>Money<input id="devMoney" type="text" inputmode="decimal" placeholder="ex: 1e20"></label><button data-dev="set-money" type="button">SET MONEY</button><button data-dev="add-money" type="button">ADD MONEY</button><button data-dev="max-money" type="button">1 CENTILLION</button></section>
+        <section><h3>Progression</h3><label>Rebirths<input id="devRebirths" type="number" min="0" step="1" value="10"></label><button data-dev="add-rebirth" type="button">ADD REBIRTHS</button><label>Fragments<input id="devFragments" type="number" min="0" step="1" value="100"></label><button data-dev="add-fragments" type="button">ADD FRAGMENTS</button></section>
+        <section><h3>Mutations</h3><select id="devMutation"></select><button data-dev="mutation" type="button">FORCE MUTATION</button><button data-dev="secret" type="button">FORCE ???</button><button data-dev="fracture" type="button">FRACTURE EVENT</button></section>
+        <section><h3>Time & Debug</h3><button data-dev="offline-day" type="button">SIMULATE 24H OFFLINE</button><button data-dev="infinite-offline" type="button">TOGGLE ∞ OFFLINE</button><button data-dev="complete-missions" type="button">COMPLETE MISSIONS</button><button data-dev="sandbox" type="button">SANDBOX SNAPSHOT</button></section>
+      </div>
+      <pre id="devDebug"></pre>
+    </div>
+  </dialog>
+
+  <script type="module" src="js/game.js"></script>
+</body>
+</html>
