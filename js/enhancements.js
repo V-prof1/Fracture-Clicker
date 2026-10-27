@@ -1,81 +1,85 @@
 import {developerReady} from './security.js';
 
 const SAVE_KEY='fracture-clicker-save-v1';
-const EXTRA_AUDIO_KEY='fracture-extra-audio-v2';
+const EXTRA_AUDIO_KEY='fracture-extra-audio-v3';
 const $=s=>document.querySelector(s);
 
 function gameState(){
   try{return JSON.parse(localStorage.getItem(SAVE_KEY)||'{}')||{}}catch{return{}}
 }
 function extraSettings(){
-  try{return{music:true,musicVolume:.28,...JSON.parse(localStorage.getItem(EXTRA_AUDIO_KEY)||'{}')}}catch{return{music:true,musicVolume:.28}}
+  try{return{music:true,musicVolume:.22,...JSON.parse(localStorage.getItem(EXTRA_AUDIO_KEY)||'{}')}}catch{return{music:true,musicVolume:.22}}
 }
 function saveExtra(v){localStorage.setItem(EXTRA_AUDIO_KEY,JSON.stringify(v))}
 
-/* ---------- brighter calm soundtrack ---------- */
-let ctx=null,musicBus=null,musicTimer=null,phrase=0;
-function audioContext(){
-  if(!ctx){
-    ctx=new (window.AudioContext||window.webkitAudioContext)();
-    musicBus=ctx.createGain();
-    const comp=ctx.createDynamicsCompressor();
-    comp.threshold.value=-24;comp.knee.value=18;comp.ratio.value=3;comp.attack.value=.01;comp.release.value=.18;
-    musicBus.gain.value=.0001;
-    musicBus.connect(comp).connect(ctx.destination);
-  }
-  if(ctx.state==='suspended')ctx.resume();
-  return ctx;
-}
-
-/* All-major / add6 / add9 voicings on purpose: calm, warm and more optimistic. */
-const SONG=[
-  [261.63,329.63,392.00,493.88,587.33],
-  [349.23,440.00,523.25,659.25,783.99],
-  [392.00,493.88,587.33,659.25,783.99],
-  [329.63,392.00,523.25,659.25,783.99]
+/* ---------- real CC0 background music playlist ---------- */
+const MUSIC_TRACKS=[
+  {title:'Feel Good Island Loop',url:'https://raw.githubusercontent.com/Iakirmon/platformer-2d/main/assets/music/gameplay.ogg'},
+  {title:'Cheesy Loop 1',url:'https://raw.githubusercontent.com/Iakirmon/platformer-2d/main/assets/music/gameplay_l2.ogg'},
+  {title:'Short Plingy Loop',url:'https://raw.githubusercontent.com/Iakirmon/platformer-2d/main/assets/music/gameplay_l3.ogg'},
+  {title:'Backfoot',url:'https://raw.githubusercontent.com/Iakirmon/platformer-2d/main/assets/music/gameplay_l4.ogg'}
 ];
-const ARP=[0,2,4,2,1,3,4,3];
-
-function musicVoice(freq,start,duration,volume,type='sine',cutoff=2100){
-  const c=audioContext(),o=c.createOscillator(),g=c.createGain(),f=c.createBiquadFilter();
-  o.type=type;o.frequency.value=freq;f.type='lowpass';f.frequency.value=cutoff;f.Q.value=.25;
-  g.gain.setValueAtTime(.0001,start);g.gain.exponentialRampToValueAtTime(Math.max(.0001,volume),start+.035);
-  g.gain.exponentialRampToValueAtTime(.0001,start+duration);
-  o.connect(f).connect(g).connect(musicBus);o.start(start);o.stop(start+duration+.03);
+let music=null,musicStarted=false,musicOrder=[],musicPos=0;
+function shuffledOrder(){
+  const a=MUSIC_TRACKS.map((_,i)=>i);
+  for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}
+  return a;
 }
-function softPluck(freq,start,volume=.036){
-  musicVoice(freq,start,.34,volume,'triangle',2800);
-  musicVoice(freq*2,start+.008,.18,volume*.24,'sine',3600);
+function updateNowPlaying(){
+  const el=$('#musicNowPlaying');
+  if(!el)return;
+  const idx=musicOrder[musicPos]??0;
+  el.textContent=musicStarted?`Tocando: ${MUSIC_TRACKS[idx].title}`:'Playlist CC0 pronta';
 }
-function schedulePhrase(){
-  const s=extraSettings();
-  if(!s.music||document.hidden)return;
-  const c=audioContext(),start=c.currentTime+.04,chord=SONG[phrase++%SONG.length];
-  musicBus.gain.cancelScheduledValues(start);
-  musicBus.gain.setTargetAtTime(Math.max(.0001,s.musicVolume),start,.12);
-
-  chord.slice(0,4).forEach((freq,i)=>{
-    musicVoice(freq/2,start,3.45,.010+(i===0 ? .004 : 0),i===0?'sine':'triangle',1200);
-  });
-
-  ARP.forEach((idx,i)=>{
-    const octave=i===4||i===7?2:1;
-    softPluck(chord[idx%chord.length]*octave,start+.18+i*.39,i%2===0?.042:.032);
-  });
-
-  musicVoice(chord[4]*2,start+2.95,.48,.018,'sine',4200);
+function ensureMusic(){
+  if(music)return music;
+  music=new Audio();
+  music.preload='auto';
+  music.crossOrigin='anonymous';
+  music.addEventListener('ended',()=>nextTrack());
+  music.addEventListener('error',()=>setTimeout(()=>nextTrack(),250));
+  return music;
+}
+function loadCurrentTrack(autoplay=true){
+  if(!musicOrder.length)musicOrder=shuffledOrder();
+  const idx=musicOrder[musicPos%musicOrder.length],track=MUSIC_TRACKS[idx],a=ensureMusic();
+  a.src=track.url;
+  a.volume=Math.max(0,Math.min(1,extraSettings().musicVolume));
+  a.loop=false;
+  a.load();
+  updateNowPlaying();
+  if(autoplay&&extraSettings().music&&!document.hidden){
+    const p=a.play();if(p&&typeof p.catch==='function')p.catch(()=>{});
+    musicStarted=true;updateNowPlaying();
+  }
+}
+function nextTrack(){
+  musicPos++;
+  if(musicPos>=musicOrder.length){musicOrder=shuffledOrder();musicPos=0}
+  loadCurrentTrack(true);
 }
 function startMusic(){
   const s=extraSettings();if(!s.music)return;
-  audioContext();if(musicTimer)return;
-  schedulePhrase();musicTimer=setInterval(schedulePhrase,3340);
+  const a=ensureMusic();a.volume=s.musicVolume;
+  if(!a.src)loadCurrentTrack(false);
+  const p=a.play();if(p&&typeof p.catch==='function')p.catch(()=>{});
+  musicStarted=true;updateNowPlaying();
 }
 function stopMusic(){
-  if(musicTimer){clearInterval(musicTimer);musicTimer=null}
-  if(musicBus&&ctx){const t=ctx.currentTime;musicBus.gain.cancelScheduledValues(t);musicBus.gain.setTargetAtTime(.0001,t,.1)}
+  if(!music)return;
+  music.pause();musicStarted=false;updateNowPlaying();
+}
+function setMusicVolume(v){
+  if(music)music.volume=Math.max(0,Math.min(1,v));
 }
 
-/* ---------- extra tactile layer ---------- */
+/* ---------- click tactile layer ---------- */
+let fxCtx=null;
+function audioContext(){
+  if(!fxCtx)fxCtx=new (window.AudioContext||window.webkitAudioContext)();
+  if(fxCtx.state==='suspended')fxCtx.resume();
+  return fxCtx;
+}
 function transient(style='classic'){
   const gs=gameState(),vol=Math.max(0,Math.min(1,Number(gs?.settings?.clickVolume??.55)))*.045;
   if(vol<=0)return;
@@ -96,10 +100,11 @@ function installMusicControls(){
   const audioSection=[...document.querySelectorAll('.setting-section')].find(s=>s.querySelector('h3')?.textContent.trim()==='Áudio');
   if(!audioSection||audioSection.querySelector('.music-controls'))return;
   const s=extraSettings(),wrap=document.createElement('div');wrap.className='music-controls';
-  wrap.innerHTML=`<label class="music-row"><span>🎵 Música ambiente</span><input id="musicToggle" type="checkbox" ${s.music?'checked':''}></label><label class="music-row"><span>Volume da música</span><input id="musicVolume" type="range" min="0" max="100" value="${Math.round(s.musicVolume*100)}"></label>`;
+  wrap.innerHTML=`<label class="music-row"><span>🎵 Música ambiente</span><input id="musicToggle" type="checkbox" ${s.music?'checked':''}></label><label class="music-row"><span>Volume da música</span><input id="musicVolume" type="range" min="0" max="100" value="${Math.round(s.musicVolume*100)}"></label><small id="musicNowPlaying" style="display:block;margin-top:7px;color:#8fa0c7;font-size:9px">Playlist CC0 pronta</small>`;
   audioSection.append(wrap);
   $('#musicToggle').addEventListener('change',e=>{const n=extraSettings();n.music=e.target.checked;saveExtra(n);if(n.music)startMusic();else stopMusic()});
-  $('#musicVolume').addEventListener('input',e=>{const n=extraSettings();n.musicVolume=Number(e.target.value)/100;saveExtra(n);if(n.music){if(musicBus&&ctx)musicBus.gain.setTargetAtTime(Math.max(.0001,n.musicVolume),ctx.currentTime,.08);startMusic()}});
+  $('#musicVolume').addEventListener('input',e=>{const n=extraSettings();n.musicVolume=Number(e.target.value)/100;saveExtra(n);setMusicVolume(n.musicVolume)});
+  updateNowPlaying();
 }
 
 /* ---------- hidden developer gesture ---------- */
@@ -167,7 +172,7 @@ function installColorPass(){
 
 function boot(){
   installColorPass();installMusicControls();installDevGesture();installTactileLayer();installTreeObserver();
-  const version=$('.version');if(version)version.textContent='Fracture Clicker · Beta 0.3';
+  const version=$('.version');if(version)version.textContent='Fracture Clicker · Beta 0.4';
   const unlock=()=>{if(extraSettings().music)startMusic()};
   window.addEventListener('pointerdown',unlock,{once:true,capture:true});window.addEventListener('keydown',unlock,{once:true,capture:true});
   document.addEventListener('visibilitychange',()=>{if(document.hidden)stopMusic();else if(extraSettings().music)startMusic()});
