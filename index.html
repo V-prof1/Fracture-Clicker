@@ -9,6 +9,7 @@
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="stylesheet" href="styles.css">
   <link rel="stylesheet" href="mobile-upgrades.css">
+  <link rel="stylesheet" href="interface-v2.css?v=3">
 </head>
 <body>
   <div class="ambient" aria-hidden="true"></div>
@@ -112,7 +113,7 @@
       <section class="setting-section"><h3>Visual & Gameplay</h3><label class="switch-row">Partículas<input id="particlesToggle" type="checkbox" checked></label><label class="switch-row">Screen shake<input id="shakeToggle" type="checkbox" checked></label><label class="switch-row">Números flutuantes<input id="floatToggle" type="checkbox" checked></label><label>Notação<select id="notationSelect"><option value="suffix">1K / 1M / 1B</option><option value="scientific">1.00e12</option></select></label></section>
       <section class="setting-section"><h3>Redeem Code</h3><div class="code-row"><input id="codeInput" autocomplete="off" spellcheck="false" placeholder="Digite um código"><button id="redeemBtn" class="secondary-btn" type="button">REDEEM</button></div><small id="codeStatus">Códigos promocionais podem ser usados uma vez por save.</small></section>
       <section class="setting-section danger-zone"><h3>Save</h3><button id="exportBtn" class="secondary-btn" type="button">EXPORTAR SAVE</button><button id="resetBtn" class="danger-btn" type="button">RESETAR PROGRESSO</button></section>
-      <div class="version">Fracture Clicker · Beta 0.1</div>
+      <div class="version">Fracture Clicker · Beta 0.2</div>
     </form>
   </dialog>
 
@@ -131,5 +132,6 @@
   </dialog>
 
   <script type="module" src="js/game.js"></script>
+  <script type="module" src="js/enhancements.js?v=3"></script>
 </body>
 </html>
