@@ -29,10 +29,10 @@ function audioContext(){
 
 /* All-major / add6 / add9 voicings on purpose: calm, warm and more optimistic. */
 const SONG=[
-  [261.63,329.63,392.00,493.88,587.33], // Cmaj9
-  [349.23,440.00,523.25,659.25,783.99], // Fmaj9
-  [392.00,493.88,587.33,659.25,783.99], // G6
-  [329.63,392.00,523.25,659.25,783.99]  // C6/E
+  [261.63,329.63,392.00,493.88,587.33],
+  [349.23,440.00,523.25,659.25,783.99],
+  [392.00,493.88,587.33,659.25,783.99],
+  [329.63,392.00,523.25,659.25,783.99]
 ];
 const ARP=[0,2,4,2,1,3,4,3];
 
@@ -54,24 +54,20 @@ function schedulePhrase(){
   musicBus.gain.cancelScheduledValues(start);
   musicBus.gain.setTargetAtTime(Math.max(.0001,s.musicVolume),start,.12);
 
-  // Airy major pad.
   chord.slice(0,4).forEach((freq,i)=>{
-    musicVoice(freq/2,start,3.45,.010+(i===0?.004:0),i===0?'sine':'triangle',1200);
+    musicVoice(freq/2,start,3.45,.010+(i===0 ? .004 : 0),i===0?'sine':'triangle',1200);
   });
 
-  // Friendly little music-box/arpeggio line.
   ARP.forEach((idx,i)=>{
     const octave=i===4||i===7?2:1;
     softPluck(chord[idx%chord.length]*octave,start+.18+i*.39,i%2===0?.042:.032);
   });
 
-  // Tiny sparkle at the end of each phrase.
   musicVoice(chord[4]*2,start+2.95,.48,.018,'sine',4200);
 }
 function startMusic(){
   const s=extraSettings();if(!s.music)return;
-  audioContext();
-  if(musicTimer)return;
+  audioContext();if(musicTimer)return;
   schedulePhrase();musicTimer=setInterval(schedulePhrase,3340);
 }
 function stopMusic(){
