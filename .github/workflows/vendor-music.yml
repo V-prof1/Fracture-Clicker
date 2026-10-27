@@ -1,0 +1,38 @@
+name: Vendor CC0 Music
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/vendor-music.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  vendor:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download CC0 tracks
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p assets/music
+          curl -L --fail --retry 3 -o assets/music/feel-good-island.ogg https://raw.githubusercontent.com/Iakirmon/platformer-2d/main/assets/music/gameplay.ogg
+          curl -L --fail --retry 3 -o assets/music/cheesy-loop-1.ogg https://raw.githubusercontent.com/Iakirmon/platformer-2d/main/assets/music/gameplay_l2.ogg
+          curl -L --fail --retry 3 -o assets/music/short-plingy-loop.ogg https://raw.githubusercontent.com/Iakirmon/platformer-2d/main/assets/music/gameplay_l3.ogg
+          curl -L --fail --retry 3 -o assets/music/backfoot.ogg https://raw.githubusercontent.com/Iakirmon/platformer-2d/main/assets/music/gameplay_l4.ogg
+          test -s assets/music/feel-good-island.ogg
+          test -s assets/music/cheesy-loop-1.ogg
+          test -s assets/music/short-plingy-loop.ogg
+          test -s assets/music/backfoot.ogg
+      - name: Commit vendored music
+        shell: bash
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add assets/music
+          git diff --cached --quiet && exit 0
+          git commit -m 'assets: vendor CC0 background music'
+          git push
