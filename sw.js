@@ -1,4 +1,4 @@
-const CACHE='fracture-clicker-v4';
+const CACHE='fracture-clicker-v5';
 const ASSETS=['./','./index.html','./styles.css','./mobile-upgrades.css','./interface-v2.css','./color-pass.css','./manifest.webmanifest','./js/data.js','./js/audio.js','./js/security.js','./js/runtime/segments.js','./js/game.js','./js/enhancements.js'];
 self.addEventListener('install',event=>{event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(ASSETS)).then(()=>self.skipWaiting()))});
 self.addEventListener('activate',event=>{event.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k!==CACHE).map(k=>caches.delete(k)))).then(()=>self.clients.claim()))});
