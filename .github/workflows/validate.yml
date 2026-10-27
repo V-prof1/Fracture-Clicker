@@ -1,0 +1,28 @@
+name: Validate Web Build
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Check JavaScript syntax
+        run: |
+          node --check js/data.js
+          node --check js/audio.js
+          node --check js/security.js
+          node --check js/runtime/segments.js
+          node --check js/game.js
+          node --check sw.js
+      - name: Check required files
+        run: |
+          test -f index.html
+          test -f styles.css
+          test -f manifest.webmanifest
+          grep -q 'js/game.js' index.html
