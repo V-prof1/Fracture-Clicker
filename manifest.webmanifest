@@ -1,0 +1,11 @@
+{
+  "name":"Fracture Clicker",
+  "short_name":"Fracture",
+  "description":"Click. Rebirth. Fracture the limit.",
+  "start_url":"./",
+  "scope":"./",
+  "display":"standalone",
+  "background_color":"#090b12",
+  "theme_color":"#090b12",
+  "orientation":"any"
+}
