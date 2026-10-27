@@ -1,0 +1,38 @@
+/* Fracture Clicker UI polish - loaded last on purpose */
+:root{--glass:rgba(13,17,28,.86);--glass-2:rgba(18,23,37,.92);--edge:rgba(145,157,196,.16);--edge-strong:rgba(155,124,255,.32)}
+body{background:radial-gradient(circle at 50% -8%,#202944 0,#0d111d 30%,#080a11 72%);}
+.ambient{background:radial-gradient(circle at 18% 6%,rgba(125,101,255,.12),transparent 30%),radial-gradient(circle at 82% 18%,rgba(65,203,255,.08),transparent 26%),linear-gradient(180deg,rgba(255,255,255,.018),transparent 30%)}
+.topbar{padding:7px 8px;border:1px solid var(--edge);border-radius:16px;background:linear-gradient(180deg,rgba(20,25,40,.82),rgba(11,14,23,.72));backdrop-filter:blur(16px);box-shadow:inset 0 1px rgba(255,255,255,.035),0 12px 30px rgba(0,0,0,.18)}
+.brand{border-radius:12px;transition:background .16s ease,transform .08s ease}.brand:active{transform:scale(.98)}.brand-mark{box-shadow:inset 0 0 28px rgba(155,124,255,.13),0 0 22px rgba(124,94,255,.09)}
+.pill,.icon-btn{background:linear-gradient(180deg,rgba(27,33,52,.9),rgba(15,19,31,.9));border-color:var(--edge)}
+.hero{position:relative}.hero:before{content:"";position:absolute;left:50%;top:50%;width:min(430px,70vw);aspect-ratio:1;transform:translate(-50%,-49%);border-radius:50%;background:radial-gradient(circle,rgba(127,99,255,.08),rgba(78,145,255,.03) 43%,transparent 69%);pointer-events:none}
+.core{filter:drop-shadow(0 0 34px rgba(145,116,255,.33))}.core-inner{box-shadow:0 0 42px rgba(155,124,255,.48),inset -12px -16px 30px rgba(0,0,0,.52),inset 9px 7px 18px rgba(255,255,255,.08)}
+.tabs{border-color:var(--edge);background:rgba(9,12,20,.88);box-shadow:0 10px 28px rgba(0,0,0,.18)}.tab{transition:.16s ease}.tab.active{background:linear-gradient(180deg,#262e45,#1d2437);box-shadow:inset 0 1px rgba(255,255,255,.05)}
+.panel{border-color:var(--edge);background:linear-gradient(180deg,rgba(14,18,29,.94),rgba(10,13,21,.9));box-shadow:inset 0 1px rgba(255,255,255,.025),0 18px 50px rgba(0,0,0,.22)}
+.upgrade,.mission,.tree-node,.mutation,.stat,.rebirth-card{box-shadow:inset 0 1px rgba(255,255,255,.025)}
+.upgrade{transition:transform .08s ease,border-color .15s ease,background .15s ease}.upgrade:not(:disabled):active{transform:scale(.985);border-color:var(--edge-strong)}
+.buy-modes button.active{background:linear-gradient(180deg,#343d59,#272f45)}
+.setting-section{border-color:var(--edge)}.setting-section input,.setting-section select{background:#0d111b;border-color:#2a3348}.modal-shell{background:linear-gradient(180deg,#121725,#0d111b);border-color:rgba(129,142,181,.26)}
+.music-controls{margin-top:12px;padding:10px;border:1px solid var(--edge);border-radius:12px;background:rgba(8,11,18,.45)}.music-controls .music-row{display:grid;grid-template-columns:1fr auto;gap:12px;align-items:center;margin:0 0 8px;color:#cfd5e6;font-size:10px}.music-controls .music-row:last-child{grid-template-columns:1fr;margin-bottom:0}.music-controls input[type=checkbox]{width:20px;height:20px;accent-color:#8d75ff}.music-controls input[type=range]{width:100%}
+
+/* Mobile: FORCE both upgrade categories side by side. This intentionally wins over every older media rule. */
+@media (max-width:760px){
+  .app{padding:10px 8px 58px!important}
+  .topbar{margin:0 2px}.brand strong{font-size:12px}.brand small{font-size:8px}.brand-mark{width:34px;height:34px;font-size:20px}.pill{height:36px;padding:0 9px;font-size:11px}.icon-btn{width:36px;height:36px}
+  .hero{min-height:390px!important;padding:20px 0 14px!important;grid-template-columns:1fr!important;gap:8px!important}.money-wrap{text-align:center!important;order:1}.money-wrap h1{font-size:40px!important}.buff-row{order:2;max-width:100%!important}.core-zone{order:3}.core{width:min(54vw,210px)!important}.core-stage-label{margin-bottom:8px!important}.streak-wrap{margin-top:10px!important}
+  .tabs{top:4px;border-radius:13px;padding:3px;gap:3px}.tab{min-width:0!important;padding:10px 6px!important;font-size:10.5px!important}
+  #tab-upgrades.panel{padding:10px 7px 12px!important;margin-top:9px!important;overflow:visible!important}
+  #tab-upgrades .section-head{margin-bottom:10px!important;display:grid!important;grid-template-columns:1fr auto!important;align-items:center!important}.section-head h2{font-size:18px!important}
+  #tab-upgrades .buy-modes{max-width:170px}.buy-modes button{min-width:34px!important;min-height:32px!important;padding:4px 6px!important}
+  #tab-upgrades .upgrade-columns{display:grid!important;grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;gap:7px!important;width:100%!important;align-items:start!important}
+  #tab-upgrades .upgrade-columns>div{display:block!important;min-width:0!important;width:auto!important;max-width:none!important}
+  #tab-upgrades .upgrade-columns>div:first-child,#tab-upgrades .upgrade-columns>div:last-child{grid-column:auto!important}
+  #tab-upgrades .upgrade-columns h3{font-size:10px!important;min-height:24px!important;margin:0 0 5px!important;padding-left:2px!important}
+  #tab-upgrades .upgrade-list{display:grid!important;grid-template-columns:minmax(0,1fr)!important;gap:6px!important;width:100%!important}
+  #tab-upgrades .upgrade{display:grid!important;grid-template-columns:minmax(0,1fr)!important;gap:4px!important;min-height:86px!important;padding:8px!important;border-radius:11px!important;width:100%!important;max-width:none!important}
+  #tab-upgrades .upgrade>span:first-child{min-width:0!important}.upgrade .name{font-size:10px!important;line-height:1.1!important}.upgrade .desc{font-size:7.8px!important;line-height:1.15!important;min-height:18px!important;margin-top:3px!important}.upgrade .lvl{font-size:7.5px!important;margin-top:2px!important}.upgrade .price{width:100%!important;text-align:left!important;font-size:8.8px!important;line-height:1.12!important;white-space:normal!important;overflow-wrap:anywhere!important}
+  .mission-list{grid-template-columns:1fr!important}.achievement-grid{grid-template-columns:1fr 1fr!important}.tree-grid{grid-template-columns:1fr 1fr!important}.mutation-grid{grid-template-columns:1fr 1fr!important}.stats-grid{grid-template-columns:1fr 1fr!important}.rebirth-stats{grid-template-columns:1fr 1fr 1fr!important;gap:6px!important}.rebirth-stats div{padding:8px!important}
+}
+@media (max-width:360px){
+  #tab-upgrades .upgrade-columns{gap:5px!important}.upgrade .name{font-size:9.4px!important}.upgrade .desc{font-size:7.2px!important}.upgrade .price{font-size:8.2px!important}.buy-modes button{min-width:30px!important;padding-inline:3px!important}
+}
