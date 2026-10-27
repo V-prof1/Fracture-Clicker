@@ -1,77 +1,77 @@
 import {developerReady} from './security.js';
 
 const SAVE_KEY='fracture-clicker-save-v1';
-const EXTRA_AUDIO_KEY='fracture-extra-audio-v3';
+const EXTRA_AUDIO_KEY='fracture-extra-audio-v4';
 const $=s=>document.querySelector(s);
 
 function gameState(){
   try{return JSON.parse(localStorage.getItem(SAVE_KEY)||'{}')||{}}catch{return{}}
 }
 function extraSettings(){
-  try{return{music:true,musicVolume:.22,...JSON.parse(localStorage.getItem(EXTRA_AUDIO_KEY)||'{}')}}catch{return{music:true,musicVolume:.22}}
+  try{return{music:true,musicVolume:.24,...JSON.parse(localStorage.getItem(EXTRA_AUDIO_KEY)||'{}')}}catch{return{music:true,musicVolume:.24}}
 }
 function saveExtra(v){localStorage.setItem(EXTRA_AUDIO_KEY,JSON.stringify(v))}
 
-/* ---------- real CC0 background music playlist ---------- */
+/* ---------- vendored CC0 background music playlist ---------- */
 const MUSIC_TRACKS=[
-  {title:'Feel Good Island Loop',url:'https://raw.githubusercontent.com/Iakirmon/platformer-2d/main/assets/music/gameplay.ogg'},
-  {title:'Cheesy Loop 1',url:'https://raw.githubusercontent.com/Iakirmon/platformer-2d/main/assets/music/gameplay_l2.ogg'},
-  {title:'Short Plingy Loop',url:'https://raw.githubusercontent.com/Iakirmon/platformer-2d/main/assets/music/gameplay_l3.ogg'},
-  {title:'Backfoot',url:'https://raw.githubusercontent.com/Iakirmon/platformer-2d/main/assets/music/gameplay_l4.ogg'}
+  {title:'Feel Good Island Loop',url:'./assets/music/feel-good-island.ogg'},
+  {title:'Cheesy Loop 1',url:'./assets/music/cheesy-loop-1.ogg'},
+  {title:'Short Plingy Loop',url:'./assets/music/short-plingy-loop.ogg'},
+  {title:'Backfoot',url:'./assets/music/backfoot.ogg'}
 ];
-let music=null,musicStarted=false,musicOrder=[],musicPos=0;
+let music=null,musicStarted=false,musicOrder=[],musicPos=0,musicFailed=0;
 function shuffledOrder(){
   const a=MUSIC_TRACKS.map((_,i)=>i);
   for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}
   return a;
 }
-function updateNowPlaying(){
-  const el=$('#musicNowPlaying');
-  if(!el)return;
-  const idx=musicOrder[musicPos]??0;
-  el.textContent=musicStarted?`Tocando: ${MUSIC_TRACKS[idx].title}`:'Playlist CC0 pronta';
+function currentTrack(){
+  if(!musicOrder.length)musicOrder=shuffledOrder();
+  return MUSIC_TRACKS[musicOrder[musicPos%musicOrder.length]];
+}
+function updateNowPlaying(message=''){
+  const el=$('#musicNowPlaying');if(!el)return;
+  if(message){el.textContent=message;return}
+  el.textContent=musicStarted?`Tocando: ${currentTrack().title}`:'Música pronta';
 }
 function ensureMusic(){
   if(music)return music;
   music=new Audio();
   music.preload='auto';
-  music.crossOrigin='anonymous';
+  music.playsInline=true;
   music.addEventListener('ended',()=>nextTrack());
-  music.addEventListener('error',()=>setTimeout(()=>nextTrack(),250));
+  music.addEventListener('error',()=>{
+    musicStarted=false;musicFailed++;
+    if(musicFailed<MUSIC_TRACKS.length){updateNowPlaying('Falha nessa faixa · tentando outra…');setTimeout(()=>nextTrack(),120)}
+    else updateNowPlaying('Não foi possível tocar áudio neste navegador.');
+  });
+  music.addEventListener('playing',()=>{musicStarted=true;musicFailed=0;updateNowPlaying()});
+  music.addEventListener('pause',()=>{if(!document.hidden&&!music.ended){musicStarted=false;updateNowPlaying()}});
   return music;
 }
-function loadCurrentTrack(autoplay=true){
-  if(!musicOrder.length)musicOrder=shuffledOrder();
-  const idx=musicOrder[musicPos%musicOrder.length],track=MUSIC_TRACKS[idx],a=ensureMusic();
-  a.src=track.url;
-  a.volume=Math.max(0,Math.min(1,extraSettings().musicVolume));
-  a.loop=false;
-  a.load();
-  updateNowPlaying();
-  if(autoplay&&extraSettings().music&&!document.hidden){
-    const p=a.play();if(p&&typeof p.catch==='function')p.catch(()=>{});
-    musicStarted=true;updateNowPlaying();
+function loadCurrentTrack(){
+  const a=ensureMusic(),track=currentTrack();
+  if(!a.src||!decodeURIComponent(a.src).endsWith(track.url.replace('./',''))){
+    a.src=track.url;a.load();
   }
+  a.volume=Math.max(0,Math.min(1,extraSettings().musicVolume));
+  return a;
+}
+async function playCurrent(){
+  const s=extraSettings();if(!s.music)return false;
+  const a=loadCurrentTrack();
+  try{await a.play();musicStarted=true;musicFailed=0;updateNowPlaying();return true}
+  catch(err){musicStarted=false;updateNowPlaying('Toque em ▶ TOCAR MÚSICA');return false}
 }
 function nextTrack(){
   musicPos++;
   if(musicPos>=musicOrder.length){musicOrder=shuffledOrder();musicPos=0}
-  loadCurrentTrack(true);
+  if(music){music.pause();music.removeAttribute('src');music.load()}
+  playCurrent();
 }
-function startMusic(){
-  const s=extraSettings();if(!s.music)return;
-  const a=ensureMusic();a.volume=s.musicVolume;
-  if(!a.src)loadCurrentTrack(false);
-  const p=a.play();if(p&&typeof p.catch==='function')p.catch(()=>{});
-  musicStarted=true;updateNowPlaying();
-}
-function stopMusic(){
-  if(!music)return;
-  music.pause();musicStarted=false;updateNowPlaying();
-}
-function setMusicVolume(v){
-  if(music)music.volume=Math.max(0,Math.min(1,v));
-}
+function startMusic(){return playCurrent()}
+function stopMusic(){if(!music)return;music.pause();musicStarted=false;updateNowPlaying('Música pausada')}
+function setMusicVolume(v){if(music)music.volume=Math.max(0,Math.min(1,v))}
 
 /* ---------- click tactile layer ---------- */
 let fxCtx=null;
@@ -100,10 +100,11 @@ function installMusicControls(){
   const audioSection=[...document.querySelectorAll('.setting-section')].find(s=>s.querySelector('h3')?.textContent.trim()==='Áudio');
   if(!audioSection||audioSection.querySelector('.music-controls'))return;
   const s=extraSettings(),wrap=document.createElement('div');wrap.className='music-controls';
-  wrap.innerHTML=`<label class="music-row"><span>🎵 Música ambiente</span><input id="musicToggle" type="checkbox" ${s.music?'checked':''}></label><label class="music-row"><span>Volume da música</span><input id="musicVolume" type="range" min="0" max="100" value="${Math.round(s.musicVolume*100)}"></label><small id="musicNowPlaying" style="display:block;margin-top:7px;color:#8fa0c7;font-size:9px">Playlist CC0 pronta</small>`;
+  wrap.innerHTML=`<label class="music-row"><span>🎵 Música ambiente</span><input id="musicToggle" type="checkbox" ${s.music?'checked':''}></label><label class="music-row"><span>Volume da música</span><input id="musicVolume" type="range" min="0" max="100" value="${Math.round(s.musicVolume*100)}"></label><div style="display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center"><small id="musicNowPlaying" style="display:block;color:#8fa0c7;font-size:9px">Música pronta</small><button id="musicPlayBtn" class="secondary-btn" type="button" style="padding:8px 10px">▶ TOCAR</button></div>`;
   audioSection.append(wrap);
   $('#musicToggle').addEventListener('change',e=>{const n=extraSettings();n.music=e.target.checked;saveExtra(n);if(n.music)startMusic();else stopMusic()});
   $('#musicVolume').addEventListener('input',e=>{const n=extraSettings();n.musicVolume=Number(e.target.value)/100;saveExtra(n);setMusicVolume(n.musicVolume)});
+  $('#musicPlayBtn').addEventListener('click',async()=>{const n=extraSettings();if(!n.music){n.music=true;saveExtra(n);$('#musicToggle').checked=true}await playCurrent()});
   updateNowPlaying();
 }
 
@@ -136,9 +137,7 @@ const TREE_BRANCHES=[
   {key:'mutation',icon:'✧',title:'MUTATION',sub:'Luck & mutation power',names:['Mutation Luck','Unstable Matter']}
 ];
 function nodeName(btn){return (btn.querySelector('b')?.textContent||'').split(' · ')[0].trim()}
-function nodeLevel(btn){
-  const text=btn.querySelector('b')?.textContent||'';const m=text.match(/·\s*([\d,.]+)\//);return m?Number(m[1].replace(/,/g,'')):0;
-}
+function nodeLevel(btn){const text=btn.querySelector('b')?.textContent||'';const m=text.match(/·\s*([\d,.]+)\//);return m?Number(m[1].replace(/,/g,'')):0}
 function decorateTree(){
   const root=$('#fragmentTree');if(!root)return;
   const direct=[...root.children].filter(x=>x.classList.contains('tree-node'));if(!direct.length)return;
@@ -146,15 +145,7 @@ function decorateTree(){
   TREE_BRANCHES.forEach(branch=>{
     const col=document.createElement('section');col.className=`skill-branch branch-${branch.key}`;
     col.innerHTML=`<div class="skill-branch-head"><span>${branch.icon}</span><div><b>${branch.title}</b><small>${branch.sub}</small></div></div>`;
-    branch.names.forEach((name,index)=>{
-      const btn=byName.get(name);if(!btn)return;
-      btn.dataset.branch=branch.key;btn.dataset.depth=String(index);
-      if(index>0){
-        const prev=byName.get(branch.names[index-1]);
-        if(prev&&nodeLevel(prev)<1){btn.disabled=true;btn.classList.add('locked-by-path');btn.title=`Invista 1 nível em ${branch.names[index-1]} primeiro`;}
-      }
-      col.append(btn);
-    });
+    branch.names.forEach((name,index)=>{const btn=byName.get(name);if(!btn)return;btn.dataset.branch=branch.key;btn.dataset.depth=String(index);if(index>0){const prev=byName.get(branch.names[index-1]);if(prev&&nodeLevel(prev)<1){btn.disabled=true;btn.classList.add('locked-by-path');btn.title=`Invista 1 nível em ${branch.names[index-1]} primeiro`}}col.append(btn)});
     root.append(col);
   });
 }
@@ -164,15 +155,11 @@ function installTreeObserver(){
   obs.observe(root,{childList:true});decorateTree();
   const heading=$('#tab-rebirth .section-head h2');if(heading&&heading.textContent.includes('Fragment'))heading.textContent='Fragment Skill Tree';
 }
-
-function installColorPass(){
-  if(document.querySelector('link[data-fracture-color]'))return;
-  const link=document.createElement('link');link.rel='stylesheet';link.href='color-pass.css?v=1';link.dataset.fractureColor='1';document.head.append(link);
-}
+function installColorPass(){if(document.querySelector('link[data-fracture-color]'))return;const link=document.createElement('link');link.rel='stylesheet';link.href='color-pass.css?v=1';link.dataset.fractureColor='1';document.head.append(link)}
 
 function boot(){
   installColorPass();installMusicControls();installDevGesture();installTactileLayer();installTreeObserver();
-  const version=$('.version');if(version)version.textContent='Fracture Clicker · Beta 0.4';
+  const version=$('.version');if(version)version.textContent='Fracture Clicker · Beta 0.4.1';
   const unlock=()=>{if(extraSettings().music)startMusic()};
   window.addEventListener('pointerdown',unlock,{once:true,capture:true});window.addEventListener('keydown',unlock,{once:true,capture:true});
   document.addEventListener('visibilitychange',()=>{if(document.hidden)stopMusic();else if(extraSettings().music)startMusic()});
